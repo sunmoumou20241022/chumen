@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#FFFFFF">
+    <title>河南技师学院</title>
+    <style>
+        /* 全局基础设置 */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+        #__vconsole, .vc-switch, #vconsole { display: none !important; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; background-color: #F7F7F7;}
+
+        /* ==================== 登录拦截界面 ==================== */
+        #loginGate {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #F7F7F7; z-index: 9999; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .login-box {
+            width: 85%; background: #FFFFFF; padding: 8vw; border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center;
+        }
+        .login-box h2 { color: #333; margin-bottom: 2vh; font-size: 6vw; letter-spacing: 2px;}
+        .login-box p { color: #888; font-size: 3.5vw; margin-bottom: 4vh; }
+        .input-group { margin-bottom: 3vh; }
+        .input-group input {
+            width: 100%; padding: 1.5vh 3vw; border: 1px solid #ddd; border-radius: 6px;
+            font-size: 4.5vw; outline: none; background: #fafafa; text-align: center;
+        }
+        .input-group input:focus { border-color: #07C160; background: #fff; }
+        .login-btn {
+            width: 100%; background: #07C160; color: white; border: none; border-radius: 6px;
+            padding: 1.5vh 0; font-size: 5vw; font-weight: bold; letter-spacing: 2px;
+            margin-top: 1vh; cursor: pointer; box-shadow: 0 4px 10px rgba(7, 193, 96, 0.3);
+        }
+        .login-btn:active { background: #06ad56; }
+        .error-msg { color: #FA5151; font-size: 3.5vw; margin-top: 2vh; display: none; line-height: 1.5;}
+
+        /* ==================== 查验主界面 ==================== */
+        #mainApp {
+            background-color: #088C1B; height: 100dvh; width: 100vw; display: none; 
+            flex-direction: column; color: #FFFFFF;
+        }
+        .wx-header { width: 100%; padding-top: 35px; height: 85px; background-color: #FFFFFF; display: flex; justify-content: space-between; align-items: center; padding-left: 15px; padding-right: 15px; position: relative; z-index: 10; color: #000; }
+        .wx-header .back-btn svg { width: 24px; height: 24px; fill: #000; }
+        .wx-header .title-text { font-size: 17px; font-weight: bold; position: absolute; left: 50%; transform: translateX(-50%); }
+        .capsule { display: flex; align-items: center; justify-content: center; width: 80px; height: 30px; border-radius: 15px; border: 1px solid rgba(0,0,0,0.1); background: rgba(255,255,255,0.6); gap: 10px; }
+        .capsule .divider { width: 1px; height: 16px; background: rgba(0,0,0,0.1); }
+        
+        .access-body { flex-grow: 1; display: flex; flex-direction: column; align-items: center; padding-top: 2vh; position: relative; }
+        .time-box-container { width: 90%; border: 1px solid #FFFFFF; padding: 5px 0; text-align: center; margin-bottom: 2vh; }
+        .time-box { font-size: 4.5vw; font-family: monospace; letter-spacing: 1px; }
+        .number-box { font-size: 16vw; font-weight: 900; margin-bottom: 2vh; font-family: 'VT323', 'Pixel', 'Courier New', monospace; letter-spacing: 4px; }
+        .top-status { font-size: 6vw; font-weight: bold; margin-bottom: 3vh; letter-spacing: 2px; }
+        
+        .photo-container { width: 40vw; aspect-ratio: 3 / 4; background-color: rgba(255,255,255,0.2); margin-bottom: 3vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .photo-container img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .photo-placeholder { color: #FFF; font-size: 3.5vw; text-align: center; opacity: 0.8; }
+        
+        .details-wrapper { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .d-name { font-size: 7vw; font-weight: bold; margin-bottom: 1.5vh; letter-spacing: 1px; }
+        .d-row { font-size: 4vw; margin-bottom: 1.2vh; letter-spacing: 0.5px; opacity: 0.95; text-align: center; }
+        
+        .refresh-btn { margin-top: 2vh; width: 80%; padding: 1.2vh 0; border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 6px; font-size: 4.5vw; background-color: transparent; text-align: center; letter-spacing: 2px; cursor: pointer; }
+        .loading-toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.7); color: white; padding: 20px 30px; border-radius: 10px; display: none; flex-direction: column; align-items: center; z-index: 50; }
+        .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ==================== 隐藏设置面板 ==================== */
+        #settingsModal { display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background-color: rgba(0, 0, 0, 0.95); z-index: 100; padding: 5vh 5vw; overflow-y: auto; color: white; }
+        .settings-group { margin-bottom: 2vh; display: flex; flex-direction: column; }
+        .settings-group label { font-size: 4vw; margin-bottom: 0.5vh; color: #07C160; font-weight: bold;}
+        .settings-group input { padding: 1.2vh; font-size: 3.5vw; border-radius: 5px; border: none; outline: none; color: #000; }
+        .btn-group { display: flex; justify-content: space-between; margin-top: 4vh; margin-bottom: 5vh;}
+        button { padding: 1.5vh 8vw; font-size: 4vw; border: none; border-radius: 5px; font-weight: bold; color: white; }
+        .btn-save { background-color: #07C160; }
+        .btn-close { background-color: #FA5151; }
+        .btn-logout { background-color: #888; width: 100%; margin-top: 2vh;}
+    </style>
+</head>
+<body>
+    
+    <div id="loginGate">
+        <div class="login-box">
+            <h2>系统登录</h2>
+            <p>请输入管理员分配的专属账号</p>
+            <div class="input-group"><input type="text" id="loginUser" placeholder="账号"></div>
+            <div class="input-group"><input type="password" id="loginPass" placeholder="密码"></div>
+            <button class="login-btn" id="loginBtn" onclick="verifyLogin()">登 录</button>
+            <div class="error-msg" id="errorMsg">账号不存在或权限已被撤销！</div>
+        </div>
+    </div>
+
+    <div id="mainApp">
+        <div class="wx-header" id="triggerHeader">
+            <div class="back-btn"><svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg></div>
+            <div class="title-text">河南技师学院</div>
+            <div class="capsule"><svg viewBox="0 0 24 24" width="18" height="18"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><div class="divider"></div><svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="6" fill="none" stroke="black" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="black"/></svg></div>
+        </div>
+
+        <div class="access-body" id="contentBody">
+            <div class="time-box-container"><div class="time-box" id="timeBox"></div></div>
+            <div class="number-box" id="numberBox"></div>
+            <div class="top-status" id="v-status">可离校</div>
+            
+            <div class="photo-container">
+                <div class="photo-placeholder" id="photoTip">请在设置中配置<br>直链或上传照片</div>
+                <img src="" alt="头像" id="displayPhoto">
+            </div>
+            
+            <div class="details-wrapper">
+                <div class="d-name" id="v-name">孙全智</div>
+                <div class="d-row" id="v-role">学生 / 24数媒技师3班</div>
+                <div class="d-row" id="v-dorm">宿舍：一号楼-三层层-320</div>
+                <div class="d-row" id="v-campus1">适用校区：北校区</div>
+                <div class="d-row" id="v-campus2">适用校区：北校区</div>
+                <div class="d-row" id="v-leaveTime">计划离校：2026-05-19 16:04</div>
+                <div class="d-row" id="v-returnTime">最迟返校：2026-05-19 17:04</div>
+                <div class="d-row" id="v-approver">批假人：阙婧茹【18699595950】</div>
+            </div>
+
+            <div class="refresh-btn" id="refreshBtn">刷新状态</div>
+            <div class="loading-toast" id="loadingToast"><div class="spinner"></div><div>请稍后...</div></div>
+        </div>
+    </div>
+
+    <div id="settingsModal">
+        <h2 style="text-align: center; margin-bottom: 2vh;">全量参数设置</h2>
+        <div class="settings-group"><label>1. 照片网络地址 (或使用本地上传)</label><input type="text" id="inputPhotoUrl" placeholder="输入照片链接"></div>
+        <div class="settings-group"><label>状态文字</label><input type="text" id="i-status" value="可离校"></div>
+        <div class="settings-group"><label>姓名</label><input type="text" id="i-name" value="孙全智"></div>
+        <div class="settings-group"><label>身份及班级</label><input type="text" id="i-role" value="学生 / 24数媒技师3班"></div>
+        <div class="settings-group"><label>宿舍信息</label><input type="text" id="i-dorm" value="宿舍：一号楼-三层层-320"></div>
+        <div class="settings-group"><label>适用校区 1</label><input type="text" id="i-campus1" value="适用校区：北校区"></div>
+        <div class="settings-group"><label>适用校区 2</label><input type="text" id="i-campus2" value="适用校区：北校区"></div>
+        <div class="settings-group"><label>计划离校时间</label><input type="text" id="i-leaveTime" value="计划离校：2026-05-19 16:04"></div>
+        <div class="settings-group"><label>最迟返校时间</label><input type="text" id="i-returnTime" value="最迟返校：2026-05-19 17:04"></div>
+        <div class="settings-group"><label>批假人信息</label><input type="text" id="i-approver" value="批假人：阙婧茹【18699595950】"></div>
+
+        <div class="btn-group">
+            <button class="btn-close" onclick="closeSettings()">取消</button>
+            <button class="btn-save" onclick="saveSettings()">全部保存</button>
+        </div>
+        <button class="btn-logout" onclick="logout()">退出当前账号并注销</button>
+    </div>
+
+<script>
+    // ==================== 🌐 【Gitee 官方 API 终点】 ====================
+    // 使用开放接口，完美绕过浏览器的跨域（CORS）拦截！
+    const GITEE_API_URL = "https://gitee.com/api/v5/repos/sunmoumou710/db.txt/contents/db.txt"; 
+
+    // ==================== 权限验证核心逻辑 ====================
+    async function verifyLogin() {
+        const u = document.getElementById('loginUser').value.trim();
+        const p = document.getElementById('loginPass').value.trim();
+        const btn = document.getElementById('loginBtn');
+        const err = document.getElementById('errorMsg');
+        
+        if(!u || !p) { err.innerText = "请输入账号和密码"; err.style.display = "block"; return; }
+        
+        btn.innerText = "正在安全验密...";
+        err.style.display = "none";
+
+        try {
+            // 1. 动态请求 Gitee 官方 API（加时间戳防止手机浏览器缓存）
+            let res = await fetch(GITEE_API_URL + '?t=' + new Date().getTime());
+            if(!res.ok) throw new Error("Gitee API 无法访问");
+            
+            let json = await res.json();
+            
+            // 2. Gitee API 返回的内容是 Base64 编码的，我们用安全函数解密它
+            let base64Content = json.content;
+            let databaseText = b64ToUtf8(base64Content);
+            
+            // 3. 完美的账号密码匹配规则 (格式：账号----密码)
+            let authString = `${u}----${p}`; 
+            
+            // 4. 核心鉴权：只有云端文本里包含这一行，才允许进入
+            if(databaseText.includes(authString)) {
+                grantAccess(); // 存在该凭证，放行！
+            } else {
+                err.innerText = "账号不存在，或权限已被管理员远程撤销！";
+                err.style.display = "block";
+            }
+        } catch (e) {
+            console.error(e);
+            err.innerText = "同步云端数据失败，请检查手机网络或确认仓库是否公开！";
+            err.style.display = "block";
+        }
+        btn.innerText = "登 录";
+    }
+
+    // 强悍的 Base64 转 UTF-8 字符串工具函数（完美支持中文，手机不乱码）
+    function b64ToUtf8(str) {
+        const binary = atob(str.replace(/\s/g, ''));
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return new TextDecoder('utf-8').decode(bytes);
+    }
+
+    function grantAccess() {
+        document.getElementById('loginGate').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'flex';
+        sessionStorage.setItem('is_logged_in', 'true');
+        startApp();
+    }
+
+    function logout() {
+        sessionStorage.removeItem('is_logged_in');
+        window.location.reload(); 
+    }
+
+    window.onload = function() {
+        if(sessionStorage.getItem('is_logged_in') === 'true') {
+            document.getElementById('loginGate').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'flex';
+            startApp();
+        }
+    }
+
+    // ==================== 以下为原有的运行和设置逻辑 ====================
+    let appTimer;
+    function startApp() {
+        loadSettings(); updateTimeAndNumber();
+        if(appTimer) clearInterval(appTimer);
+        appTimer = setInterval(updateTimeAndNumber, 1000);
+    }
+
+    const pad2 = (n) => n.toString().padStart(2, '0');
+    const pad3 = (n) => n.toString().padStart(3, '0');
+    const fields = ['status', 'name', 'role', 'dorm', 'campus1', 'campus2', 'leaveTime', 'returnTime', 'approver'];
+
+    function loadSettings() {
+        fields.forEach(f => {
+            const val = localStorage.getItem('sec_' + f);
+            if(val) { document.getElementById('v-' + f).innerText = val; document.getElementById('i-' + f).value = val; }
+        });
+        const savedPhoto = localStorage.getItem('sec_photo');
+        if (savedPhoto) {
+            document.getElementById('displayPhoto').src = savedPhoto;
+            document.getElementById('displayPhoto').style.display = 'block';
+            document.getElementById('photoTip').style.display = 'none';
+            document.getElementById('inputPhotoUrl').value = savedPhoto;
+        }
+    }
+
+    function saveSettings() {
+        fields.forEach(f => {
+            const val = document.getElementById('i-' + f).value;
+            localStorage.setItem('sec_' + f, val);
+        });
+        const photoUrl = document.getElementById('inputPhotoUrl').value.trim();
+        if (photoUrl) {
+            localStorage.setItem('sec_photo', photoUrl);
+            document.getElementById('displayPhoto').src = photoUrl;
+            document.getElementById('displayPhoto').style.display = 'block';
+            document.getElementById('photoTip').style.display = 'none';
+        }
+        loadSettings(); closeSettings(); updateTimeAndNumber();
+    }
+
+    function openSettings() { document.getElementById('settingsModal').style.display = 'block'; }
+    function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+
+    let clickCount = 0;
+    document.getElementById('triggerHeader').addEventListener('click', function() {
+        clickCount++;
+        if(clickCount === 1) { setTimeout(() => { clickCount = 0; }, 400); } 
+        else if(clickCount === 2) { openSettings(); clickCount = 0; }
+    });
+
+    let isAnimating = false;
+    document.getElementById('refreshBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (isAnimating) return;
+        isAnimating = true;
+        const toast = document.getElementById('loadingToast');
+        toast.style.display = 'flex';
+        setTimeout(() => { toast.style.display = 'none'; isAnimating = false; updateTimeAndNumber(); }, 1200); 
+    });
+
+    function updateTimeAndNumber() {
+        const d = new Date();
+        const dateStr = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+        const timeStr = `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+        document.getElementById('timeBox').innerText = `${dateStr} ${timeStr}`;
+        const currentSeconds = pad2(d.getSeconds());
+        const randomSuffix = pad3(Math.floor(Math.random() * 999) + 1);
+        document.getElementById('numberBox').innerText = `${currentSeconds} - ${randomSuffix}`;
+    }
+</script>
+</body>
+</html>
