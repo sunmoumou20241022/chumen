@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#FFFFFF">
-    <title>河南技师学院</title>
+    <title>河南技师学院 - 授权登录</title>
     <style>
         /* 全局基础设置 */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
-        #__vconsole, .vc-switch, #vconsole { display: none !important; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; background-color: #F7F7F7;}
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
 
-        /* ==================== 登录拦截界面 ==================== */
+        /* ==================== 登录拦截界面 UI ==================== */
         #loginGate {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
             background-color: #F7F7F7; z-index: 9999; 
@@ -27,7 +26,7 @@
         .input-group { margin-bottom: 3vh; }
         .input-group input {
             width: 100%; padding: 1.5vh 3vw; border: 1px solid #ddd; border-radius: 6px;
-            font-size: 4.5vw; outline: none; background: #fafafa; text-align: center;
+            font-size: 4.5vw; outline: none; background: #fafafa;
         }
         .input-group input:focus { border-color: #07C160; background: #fff; }
         .login-btn {
@@ -35,40 +34,39 @@
             padding: 1.5vh 0; font-size: 5vw; font-weight: bold; letter-spacing: 2px;
             margin-top: 1vh; cursor: pointer; box-shadow: 0 4px 10px rgba(7, 193, 96, 0.3);
         }
-        .login-btn:active { background: #06ad56; }
-        .error-msg { color: #FA5151; font-size: 3.5vw; margin-top: 2vh; display: none; line-height: 1.5;}
+        .error-msg { color: #FA5151; font-size: 3.5vw; margin-top: 2vh; display: none; }
 
-        /* ==================== 查验主界面 ==================== */
+        /* ==================== 内部查验界面 UI ==================== */
         #mainApp {
             background-color: #088C1B; height: 100dvh; width: 100vw; display: none; 
-            flex-direction: column; color: #FFFFFF;
+            flex-direction: column; color: #FFFFFF; position: relative;
         }
         .wx-header { width: 100%; padding-top: 35px; height: 85px; background-color: #FFFFFF; display: flex; justify-content: space-between; align-items: center; padding-left: 15px; padding-right: 15px; position: relative; z-index: 10; color: #000; }
         .wx-header .back-btn svg { width: 24px; height: 24px; fill: #000; }
         .wx-header .title-text { font-size: 17px; font-weight: bold; position: absolute; left: 50%; transform: translateX(-50%); }
         .capsule { display: flex; align-items: center; justify-content: center; width: 80px; height: 30px; border-radius: 15px; border: 1px solid rgba(0,0,0,0.1); background: rgba(255,255,255,0.6); gap: 10px; }
         .capsule .divider { width: 1px; height: 16px; background: rgba(0,0,0,0.1); }
-        
         .access-body { flex-grow: 1; display: flex; flex-direction: column; align-items: center; padding-top: 2vh; position: relative; }
         .time-box-container { width: 90%; border: 1px solid #FFFFFF; padding: 5px 0; text-align: center; margin-bottom: 2vh; }
         .time-box { font-size: 4.5vw; font-family: monospace; letter-spacing: 1px; }
-        .number-box { font-size: 16vw; font-weight: 900; margin-bottom: 2vh; font-family: 'VT323', 'Pixel', 'Courier New', monospace; letter-spacing: 4px; }
+        .number-box { font-size: 16vw; font-weight: 900; margin-bottom: 2vh; font-family: monospace; letter-spacing: 4px; }
         .top-status { font-size: 6vw; font-weight: bold; margin-bottom: 3vh; letter-spacing: 2px; }
         
-        .photo-container { width: 40vw; aspect-ratio: 3 / 4; background-color: rgba(255,255,255,0.2); margin-bottom: 3vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        /* 照片相框样式 */
+        .photo-container { width: 40vw; aspect-ratio: 3 / 4; background-color: rgba(255,255,255,0.2); margin-bottom: 3vh; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.4); }
         .photo-container img { width: 100%; height: 100%; object-fit: cover; display: none; }
         .photo-placeholder { color: #FFF; font-size: 3.5vw; text-align: center; opacity: 0.8; }
         
         .details-wrapper { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; }
         .d-name { font-size: 7vw; font-weight: bold; margin-bottom: 1.5vh; letter-spacing: 1px; }
         .d-row { font-size: 4vw; margin-bottom: 1.2vh; letter-spacing: 0.5px; opacity: 0.95; text-align: center; }
-        
         .refresh-btn { margin-top: 2vh; width: 80%; padding: 1.2vh 0; border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 6px; font-size: 4.5vw; background-color: transparent; text-align: center; letter-spacing: 2px; cursor: pointer; }
+        
         .loading-toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.7); color: white; padding: 20px 30px; border-radius: 10px; display: none; flex-direction: column; align-items: center; z-index: 50; }
         .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ==================== 隐藏设置面板 ==================== */
+        /* 设置面板 */
         #settingsModal { display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background-color: rgba(0, 0, 0, 0.95); z-index: 100; padding: 5vh 5vw; overflow-y: auto; color: white; }
         .settings-group { margin-bottom: 2vh; display: flex; flex-direction: column; }
         .settings-group label { font-size: 4vw; margin-bottom: 0.5vh; color: #07C160; font-weight: bold;}
@@ -106,14 +104,14 @@
             <div class="top-status" id="v-status">可离校</div>
             
             <div class="photo-container">
-            <div class="photo-placeholder" id="photoTip">请在设置中<br>配置照片</div>
-            <img src="" alt="头像" id="displayPhoto">
-        </div>
-
+                <div class="photo-placeholder" id="photoTip">请在设置中<br>配置照片</div>
+                <img src="" alt="头像" id="displayPhoto">
+            </div>
+            
             <div class="details-wrapper">
-                <div class="d-name" id="v-name"></div>
+                <div class="d-name" id="v-name">孙全智</div>
                 <div class="d-row" id="v-role">学生 / 24数媒技师3班</div>
-                <div class="d-row" id="v-dorm">宿舍：一号楼-四层-422</div>
+                <div class="d-row" id="v-dorm">宿舍：一号楼-三层层-320</div>
                 <div class="d-row" id="v-campus1">适用校区：北校区</div>
                 <div class="d-row" id="v-campus2">适用校区：北校区</div>
                 <div class="d-row" id="v-leaveTime">计划离校：2026-05-19 16:04</div>
@@ -128,12 +126,14 @@
 
     <div id="settingsModal">
         <h2 style="text-align: center; margin-bottom: 2vh;">全量参数设置</h2>
-       <div class="settings-group">
-    <label>1. 点击选择手机相册照片</label>
-    <input type="file" id="inputPhotoFile" accept="image/*" style="background: #fff; padding: 8px; border-radius: 5px; color: #000;">
-</div>
+        
+        <div class="settings-group">
+            <label>1. 点击选择手机相册照片</label>
+            <input type="file" id="inputPhotoFile" accept="image/*" style="background: #fff; padding: 8px; border-radius: 5px; color: #000;">
+        </div>
+        
         <div class="settings-group"><label>状态文字</label><input type="text" id="i-status" value="可离校"></div>
-        <div class="settings-group"><label>姓名</label><input type="text" id="i-name" value="匿名"></div>
+        <div class="settings-group"><label>姓名</label><input type="text" id="i-name" value="孙全智"></div>
         <div class="settings-group"><label>身份及班级</label><input type="text" id="i-role" value="学生 / 24数媒技师3班"></div>
         <div class="settings-group"><label>宿舍信息</label><input type="text" id="i-dorm" value="宿舍：一号楼-三层层-320"></div>
         <div class="settings-group"><label>适用校区 1</label><input type="text" id="i-campus1" value="适用校区：北校区"></div>
@@ -149,172 +149,180 @@
         <button class="btn-logout" onclick="logout()">退出当前账号并注销</button>
     </div>
 
-<script>
-    // ==================== 🌐 【GitHub 数据库链接配置】 ====================
-    // 请把下面的用户名、仓库名替换成你自己的 GitHub 真实信息！
-    // 注意：GitHub 现在的默认分支通常叫 main，如果你的叫 master 请自行修改
-    const GITHUB_RAW_URL = "https://raw.githubusercontent.com/sunmoumou20241022/chumen/main/db.txt"; 
+    <script>
+        const GITHUB_RAW_URL = "https://raw.githubusercontent.com/sunmoumou20241022/chumen/main/db.txt"; 
+        const fields = ['status', 'name', 'role', 'dorm', 'campus1', 'campus2', 'leaveTime', 'returnTime', 'approver'];
+        let appTimer;
 
-    // ==================== 权限验证核心逻辑 ====================
-    async function verifyLogin() {
-        const u = document.getElementById('loginUser').value.trim();
-        const p = document.getElementById('loginPass').value.trim();
-        const btn = document.getElementById('loginBtn');
-        const err = document.getElementById('errorMsg');
-        
-        if(!u || !p) { err.innerText = "请输入账号和密码"; err.style.display = "block"; return; }
-        
-        btn.innerText = "正在同步云端...";
-        err.style.display = "none";
+        // ==================== 权限验证 ====================
+        async function verifyLogin() {
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+            const btn = document.getElementById('loginBtn');
+            const err = document.getElementById('errorMsg');
+            
+            if(!u || !p) { err.innerText = "请输入账号和密码"; err.style.display = "block"; return; }
+            btn.innerText = "正在同步云端...";
+            err.style.display = "none";
 
-        try {
-            // GitHub Raw 允许直接跨域请求文本，加时间戳(?t=...)防止手机浏览器缓存旧名单
-            let res = await fetch(GITHUB_RAW_URL + '?t=' + new Date().getTime());
-            if(!res.ok) throw new Error("无法读取文件");
-            
-            // 直接以纯文本形式读取 db.txt
-            let databaseText = await res.text();
-            
-            // 匹配规则 (格式：账号----密码)
-            let authString = `${u}----${p}`; 
-            
-            if(databaseText.includes(authString)) {
-                grantAccess(); // 凭证存在，完美放行！
-            } else {
-                err.innerText = "账号不存在，或权限已被管理员远程撤销！";
+            try {
+                let res = await fetch(GITHUB_RAW_URL + '?t=' + new Date().getTime());
+                if(!res.ok) throw new Error("无法读取文件");
+                let databaseText = await res.text();
+                let authString = `${u}----${p}`; 
+                
+                if(databaseText.includes(authString)) {
+                    grantAccess(); 
+                } else {
+                    err.innerText = "账号不存在，或密码错误！";
+                    err.style.display = "block";
+                }
+            } catch (e) {
+                err.innerText = "同步失败，请检查网络或确认GitHub仓库是否公开！";
                 err.style.display = "block";
             }
-        } catch (e) {
-            console.error(e);
-            err.innerText = "连接 GitHub 失败！请检查手机网络或确认仓库是否设为 Public（公开）！";
-            err.style.display = "block";
+            btn.innerText = "登 录";
         }
-        btn.innerText = "登 录";
-    }
 
-    function grantAccess() {
-        document.getElementById('loginGate').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'flex';
-        sessionStorage.setItem('is_logged_in', 'true');
-        startApp();
-    }
-
-    function logout() {
-        sessionStorage.removeItem('is_logged_in');
-        window.location.reload(); 
-    }
-
-    window.onload = function() {
-        if(sessionStorage.getItem('is_logged_in') === 'true') {
+        function grantAccess() {
             document.getElementById('loginGate').style.display = 'none';
             document.getElementById('mainApp').style.display = 'flex';
+            sessionStorage.setItem('secure_is_logged_in', 'true');
             startApp();
         }
-    }
 
-    // ==================== 以下为原有的运行和设置逻辑 ====================
-    let appTimer;
-    function startApp() {
-        loadSettings(); updateTimeAndNumber();
-        if(appTimer) clearInterval(appTimer);
-        appTimer = setInterval(updateTimeAndNumber, 1000);
-    }
+        function logout() {
+            sessionStorage.removeItem('secure_is_logged_in');
+            window.location.reload(); 
+        }
 
-    const pad2 = (n) => n.toString().padStart(2, '0');
-    const pad3 = (n) => n.toString().padStart(3, '0');
-    const fields = ['status', 'name', 'role', 'dorm', 'campus1', 'campus2', 'leaveTime', 'returnTime', 'approver'];
-// ==================== 🛠️ 优化后的设置加载与保存 ====================
-        function loadSettings() {
-            fields.forEach(f => {
-                const val = localStorage.getItem('sec_' + f);
-                if(val) { document.getElementById('v-' + f).innerText = val; document.getElementById('i-' + f).value = val; }
-            });
-            const savedPhoto = localStorage.getItem('sec_photo');
-            if (savedPhoto) {
-                document.getElementById('displayPhoto').src = savedPhoto;
-                document.getElementById('displayPhoto').style.display = 'block';
-                document.getElementById('photoTip').style.display = 'none';
+        window.onload = function() {
+            if(sessionStorage.getItem('secure_is_logged_in') === 'true') {
+                document.getElementById('loginGate').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+                startApp();
             }
+        }
+
+        function startApp() {
+            loadSettings(); 
+            updateTimeAndNumber();
+            if(appTimer) clearInterval(appTimer);
+            appTimer = setInterval(updateTimeAndNumber, 1000);
+        }
+
+        // ==================== 动态时间与安全加载 ====================
+        const pad2 = (n) => n.toString().padStart(2, '0');
+        const pad3 = (n) => n.toString().padStart(3, '0');
+
+        function updateTimeAndNumber() {
+            const d = new Date();
+            const dateStr = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+            const timeStr = `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+            const tBox = document.getElementById('timeBox');
+            const nBox = document.getElementById('numberBox');
+            if(tBox) tBox.innerText = `${dateStr} ${timeStr}`;
+            if(nBox) {
+                const currentSeconds = pad2(d.getSeconds());
+                const randomSuffix = pad3(Math.floor(Math.random() * 999) + 1);
+                nBox.innerText = `${currentSeconds} - ${randomSuffix}`;
+            }
+        }
+
+        // ==================== 本地缓存数据读写（带防崩溃容错） ====================
+        function loadSettings() {
+            try {
+                fields.forEach(f => {
+                    const val = localStorage.getItem('sec_' + f);
+                    const vEl = document.getElementById('v-' + f);
+                    const iEl = document.getElementById('i-' + f);
+                    if(val) {
+                        if(vEl) vEl.innerText = val;
+                        if(iEl) iEl.value = val;
+                    }
+                });
+                const savedPhoto = localStorage.getItem('sec_photo');
+                const dPhoto = document.getElementById('displayPhoto');
+                const pTip = document.getElementById('photoTip');
+                if (savedPhoto && dPhoto) {
+                    dPhoto.src = savedPhoto;
+                    dPhoto.style.display = 'block';
+                    if(pTip) pTip.style.display = 'none';
+                }
+            } catch(e) { console.error("加载配置容错拦截: ", e); }
         }
 
         function saveSettings() {
-            // 保存其他文字字段
-            fields.forEach(f => {
-                const val = document.getElementById('i-' + f).value;
-                localStorage.setItem('sec_' + f, val);
-            });
+            try {
+                fields.forEach(f => {
+                    const iEl = document.getElementById('i-' + f);
+                    if(iEl) localStorage.setItem('sec_' + f, iEl.value);
+                });
 
-            const fileInput = document.getElementById('inputPhotoFile');
-            // 检查用户是否从相册选了新照片
-            if (fileInput.files && fileInput.files[0]) {
-                const file = fileInput.files[0];
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        // ✨ 核心防御：使用 Canvas 自动将手机大图压缩到 300x400 分辨率
-                        // 既保证了清晰度，又将体积缩减到几百KB，绝不撑爆手机浏览器缓存
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        canvas.width = 300;
-                        canvas.height = 400;
-                        ctx.drawImage(img, 0, 0, 300, 400);
-                        
-                        // 转成 base64 字符串格式并压缩质量
-                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
-                        localStorage.setItem('sec_photo', compressedBase64);
-                        
-                        // 压缩完成后执行刷新和关闭
-                        finishSave();
+                const fileInput = document.getElementById('inputPhotoFile');
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.width = 300;
+                            canvas.height = 400;
+                            ctx.drawImage(img, 0, 0, 300, 400);
+                            
+                            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                            localStorage.setItem('sec_photo', compressedBase64);
+                            finishSave();
+                        };
+                        img.src = e.target.result;
                     };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                // 如果没有选新照片，直接保存文字即可
+                    reader.readAsDataURL(file);
+                } else {
+                    finishSave();
+                }
+            } catch(e) { 
+                console.error(e);
                 finishSave();
             }
         }
 
-        // 抽出公共的保存尾部逻辑
         function finishSave() {
             loadSettings(); 
             closeSettings(); 
             updateTimeAndNumber();
-            // 清空文件选择框，方便下次更换
-            document.getElementById('inputPhotoFile').value = "";
+            const fInput = document.getElementById('inputPhotoFile');
+            if(fInput) fInput.value = "";
+            const toast = document.getElementById('loadingToast');
+            if(toast) toast.style.display = 'none';
         }
 
-    function openSettings() { document.getElementById('settingsModal').style.display = 'block'; }
-    function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+        // ==================== 交互控制 ====================
+        function openSettings() { document.getElementById('settingsModal').style.display = 'block'; }
+        function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
 
-    let clickCount = 0;
-    document.getElementById('triggerHeader').addEventListener('click', function() {
-        clickCount++;
-        if(clickCount === 1) { setTimeout(() => { clickCount = 0; }, 400); } 
-        else if(clickCount === 2) { openSettings(); clickCount = 0; }
-    });
+        let clickCount = 0;
+        document.getElementById('triggerHeader').addEventListener('click', function() {
+            clickCount++;
+            if(clickCount === 1) { setTimeout(() => { clickCount = 0; }, 400); } 
+            else if(clickCount === 2) { openSettings(); clickCount = 0; }
+        });
 
-    let isAnimating = false;
-    document.getElementById('refreshBtn').addEventListener('click', function(e) {
-        e.stopPropagation();
-        if (isAnimating) return;
-        isAnimating = true;
-        const toast = document.getElementById('loadingToast');
-        toast.style.display = 'flex';
-        setTimeout(() => { toast.style.display = 'none'; isAnimating = false; updateTimeAndNumber(); }, 1200); 
-    });
-
-    function updateTimeAndNumber() {
-        const d = new Date();
-        const dateStr = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-        const timeStr = `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
-        document.getElementById('timeBox').innerText = `${dateStr} ${timeStr}`;
-        const currentSeconds = pad2(d.getSeconds());
-        const randomSuffix = pad3(Math.floor(Math.random() * 999) + 1);
-        document.getElementById('numberBox').innerText = `${currentSeconds} - ${randomSuffix}`;
-    }
-</script>
+        let isAnimating = false;
+        document.getElementById('refreshBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (isAnimating) return;
+            isAnimating = true;
+            const toast = document.getElementById('loadingToast');
+            if(toast) toast.style.display = 'flex';
+            setTimeout(() => { 
+                if(toast) toast.style.display = 'none'; 
+                isAnimating = false; 
+                updateTimeAndNumber(); 
+            }, 1200); 
+        });
+    </script>
 </body>
 </html>
