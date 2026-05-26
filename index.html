@@ -147,9 +147,10 @@
     </div>
 
 <script>
-    // ==================== 🌐 【Gitee 官方 API 终点】 ====================
-    // 使用开放接口，完美绕过浏览器的跨域（CORS）拦截！
-    const GITEE_API_URL = "https://gitee.com/api/v5/repos/sunmoumou710/db.txt/contents/db.txt"; 
+    // ==================== 🌐 【GitHub 数据库链接配置】 ====================
+    // 请把下面的用户名、仓库名替换成你自己的 GitHub 真实信息！
+    // 注意：GitHub 现在的默认分支通常叫 main，如果你的叫 master 请自行修改
+    const GITHUB_RAW_URL = "https://raw.githubusercontent.com/sunmoumou20241022/chumen/main/db.txt"; 
 
     // ==================== 权限验证核心逻辑 ====================
     async function verifyLogin() {
@@ -160,46 +161,32 @@
         
         if(!u || !p) { err.innerText = "请输入账号和密码"; err.style.display = "block"; return; }
         
-        btn.innerText = "正在安全验密...";
+        btn.innerText = "正在同步云端...";
         err.style.display = "none";
 
         try {
-            // 1. 动态请求 Gitee 官方 API（加时间戳防止手机浏览器缓存）
-            let res = await fetch(GITEE_API_URL + '?t=' + new Date().getTime());
-            if(!res.ok) throw new Error("Gitee API 无法访问");
+            // GitHub Raw 允许直接跨域请求文本，加时间戳(?t=...)防止手机浏览器缓存旧名单
+            let res = await fetch(GITHUB_RAW_URL + '?t=' + new Date().getTime());
+            if(!res.ok) throw new Error("无法读取文件");
             
-            let json = await res.json();
+            // 直接以纯文本形式读取 db.txt
+            let databaseText = await res.text();
             
-            // 2. Gitee API 返回的内容是 Base64 编码的，我们用安全函数解密它
-            let base64Content = json.content;
-            let databaseText = b64ToUtf8(base64Content);
-            
-            // 3. 完美的账号密码匹配规则 (格式：账号----密码)
+            // 匹配规则 (格式：账号----密码)
             let authString = `${u}----${p}`; 
             
-            // 4. 核心鉴权：只有云端文本里包含这一行，才允许进入
             if(databaseText.includes(authString)) {
-                grantAccess(); // 存在该凭证，放行！
+                grantAccess(); // 凭证存在，完美放行！
             } else {
                 err.innerText = "账号不存在，或权限已被管理员远程撤销！";
                 err.style.display = "block";
             }
         } catch (e) {
             console.error(e);
-            err.innerText = "同步云端数据失败，请检查手机网络或确认仓库是否公开！";
+            err.innerText = "连接 GitHub 失败！请检查手机网络或确认仓库是否设为 Public（公开）！";
             err.style.display = "block";
         }
         btn.innerText = "登 录";
-    }
-
-    // 强悍的 Base64 转 UTF-8 字符串工具函数（完美支持中文，手机不乱码）
-    function b64ToUtf8(str) {
-        const binary = atob(str.replace(/\s/g, ''));
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return new TextDecoder('utf-8').decode(bytes);
     }
 
     function grantAccess() {
