@@ -105,15 +105,15 @@
             <div class="number-box" id="numberBox"></div>
             <div class="top-status" id="v-status">可离校</div>
             
-            <div class="photo-container">
-                <div class="photo-placeholder" id="photoTip">请在设置中配置<br>直链或上传照片</div>
-                <img src="" alt="头像" id="displayPhoto">
-            </div>
+            <div class="settings-group">
+    <label>1. 点击选择手机相册照片</label>
+    <input type="file" id="inputPhotoFile" accept="image/*" style="background: #fff; padding: 8px; border-radius: 5px; color: #000;">
+</div>
             
             <div class="details-wrapper">
-                <div class="d-name" id="v-name">孙全智</div>
+                <div class="d-name" id="v-name"></div>
                 <div class="d-row" id="v-role">学生 / 24数媒技师3班</div>
-                <div class="d-row" id="v-dorm">宿舍：一号楼-三层层-320</div>
+                <div class="d-row" id="v-dorm">宿舍：一号楼-四层-422</div>
                 <div class="d-row" id="v-campus1">适用校区：北校区</div>
                 <div class="d-row" id="v-campus2">适用校区：北校区</div>
                 <div class="d-row" id="v-leaveTime">计划离校：2026-05-19 16:04</div>
@@ -220,35 +220,68 @@
     const pad2 = (n) => n.toString().padStart(2, '0');
     const pad3 = (n) => n.toString().padStart(3, '0');
     const fields = ['status', 'name', 'role', 'dorm', 'campus1', 'campus2', 'leaveTime', 'returnTime', 'approver'];
-
-    function loadSettings() {
-        fields.forEach(f => {
-            const val = localStorage.getItem('sec_' + f);
-            if(val) { document.getElementById('v-' + f).innerText = val; document.getElementById('i-' + f).value = val; }
-        });
-        const savedPhoto = localStorage.getItem('sec_photo');
-        if (savedPhoto) {
-            document.getElementById('displayPhoto').src = savedPhoto;
-            document.getElementById('displayPhoto').style.display = 'block';
-            document.getElementById('photoTip').style.display = 'none';
-            document.getElementById('inputPhotoUrl').value = savedPhoto;
+// ==================== 🛠️ 优化后的设置加载与保存 ====================
+        function loadSettings() {
+            fields.forEach(f => {
+                const val = localStorage.getItem('sec_' + f);
+                if(val) { document.getElementById('v-' + f).innerText = val; document.getElementById('i-' + f).value = val; }
+            });
+            const savedPhoto = localStorage.getItem('sec_photo');
+            if (savedPhoto) {
+                document.getElementById('displayPhoto').src = savedPhoto;
+                document.getElementById('displayPhoto').style.display = 'block';
+                document.getElementById('photoTip').style.display = 'none';
+            }
         }
-    }
 
-    function saveSettings() {
-        fields.forEach(f => {
-            const val = document.getElementById('i-' + f).value;
-            localStorage.setItem('sec_' + f, val);
-        });
-        const photoUrl = document.getElementById('inputPhotoUrl').value.trim();
-        if (photoUrl) {
-            localStorage.setItem('sec_photo', photoUrl);
-            document.getElementById('displayPhoto').src = photoUrl;
-            document.getElementById('displayPhoto').style.display = 'block';
-            document.getElementById('photoTip').style.display = 'none';
+        function saveSettings() {
+            // 保存其他文字字段
+            fields.forEach(f => {
+                const val = document.getElementById('i-' + f).value;
+                localStorage.setItem('sec_' + f, val);
+            });
+
+            const fileInput = document.getElementById('inputPhotoFile');
+            // 检查用户是否从相册选了新照片
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // ✨ 核心防御：使用 Canvas 自动将手机大图压缩到 300x400 分辨率
+                        // 既保证了清晰度，又将体积缩减到几百KB，绝不撑爆手机浏览器缓存
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = 300;
+                        canvas.height = 400;
+                        ctx.drawImage(img, 0, 0, 300, 400);
+                        
+                        // 转成 base64 字符串格式并压缩质量
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+                        localStorage.setItem('sec_photo', compressedBase64);
+                        
+                        // 压缩完成后执行刷新和关闭
+                        finishSave();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // 如果没有选新照片，直接保存文字即可
+                finishSave();
+            }
         }
-        loadSettings(); closeSettings(); updateTimeAndNumber();
-    }
+
+        // 抽出公共的保存尾部逻辑
+        function finishSave() {
+            loadSettings(); 
+            closeSettings(); 
+            updateTimeAndNumber();
+            // 清空文件选择框，方便下次更换
+            document.getElementById('inputPhotoFile').value = "";
+        }
 
     function openSettings() { document.getElementById('settingsModal').style.display = 'block'; }
     function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
